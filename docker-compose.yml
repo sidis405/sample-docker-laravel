@@ -1,0 +1,39 @@
+version: '3'
+networks:
+  app-tier:
+    driver: bridge
+services:
+  mariadb:
+    image: mariadb:10.1.21
+    ports:
+      - "13306:3306"
+    environment:
+      - MYSQL_DATABASE=laravel_docker_db
+      - MYSQL_ROOT_PASSWORD=root
+  app:
+    depends_on:
+      - mariadb
+    build:
+      context: .
+      dockerfile: .docker/php/Dockerfile
+    networks:
+      - app-tier
+    ports:
+      - 9002:9000
+    volumes:
+      - .:/var/www/html
+    links:
+      - mariadb:mariadb
+  nginx:
+    depends_on:
+      - app
+    build:
+      context: .
+      dockerfile: .docker/nginx/Dockerfile
+    networks:
+      - app-tier
+    ports:
+      - 8080:80
+    volumes:
+      - ./public:/var/www/html/public
+
